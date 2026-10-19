@@ -783,6 +783,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("To start a voice call, enable \"Audio capture\" on the \"Screen share\" page.", "Para iniciar uma chamada de voz, ative \"Captura de áudio\" na página \"Compartilhamento de tela\"."),
         ("operator_access_consent_tip", "Após a instalação, este computador poderá ser acessado pelo técnico de suporte sem senha, para suporte sem supervisão. A janela de conexão continua aparecendo na tela durante cada acesso. Você pode desligar isto quando quiser em Configurações > Segurança."),
         ("Allow unattended support access", "Permitir acesso de suporte sem supervisão"),
-        ("allow-operator-access-tip", "Quando ligado, o técnico de suporte pode conectar neste computador sem senha, usando a chave de suporte. A conexão continua visível na tela e registrada no log local. Desligue para exigir senha de novo.")
+        ("allow-operator-access-tip", "Quando ligado, o técnico de suporte pode conectar neste computador sem senha, usando a chave de suporte. A conexão continua visível na tela e registrada no log local. Desligue para exigir senha de novo."),
+        ("login_to_view_devices_tip", "Faça login para ver suas máquinas.")
     ].iter().cloned().collect();
 }

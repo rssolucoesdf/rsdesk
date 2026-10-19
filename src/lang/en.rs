@@ -282,5 +282,6 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("operator_access_consent_tip", "After installation, this computer can be accessed by the support technician for unattended support, without a password. The connection window still appears on screen during each session. You can turn this off at any time in Settings > Security."),
         ("Allow unattended support access", "Allow unattended support access"),
         ("allow-operator-access-tip", "When on, the support technician can connect to this computer without a password, using their support key. The connection is still shown on screen and recorded in the local log. Turn it off to require a password again."),
+        ("login_to_view_devices_tip", "Log in to see your devices."),
     ].iter().cloned().collect();
 }

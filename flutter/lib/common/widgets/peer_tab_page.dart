@@ -105,6 +105,24 @@ class _PeerTabPageState extends State<PeerTabPage>
       return model.multiSelectionMode ? createMultiSelectionBar(model) : widget;
     }
 
+    // RSDesk: a lista e o historico de maquinas so aparecem com o operador logado.
+    // Ao deslogar (ou numa instalacao nova) nada e mostrado ate o login.
+    return Obx(() {
+      if (gFFI.userModel.userName.value.isEmpty) {
+        return Center(
+          child: Text(
+            translate('login_to_view_devices_tip'),
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).hintColor),
+          ),
+        );
+      }
+      return _peersColumn(context, model, selectionWrap);
+    });
+  }
+
+  Widget _peersColumn(BuildContext context, PeerTabModel model,
+      Widget Function(Widget) selectionWrap) {
     return Column(
       textBaseline: TextBaseline.ideographic,
       crossAxisAlignment: CrossAxisAlignment.start,

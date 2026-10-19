@@ -55,7 +55,9 @@ Push-Location "$repo\res\msi"
 try {
     git checkout -- . 2>$null
     $connArg = if ($Role -eq 'Cliente') { @('--conn-type', 'incoming') } else { @() }
-    python preprocess.py -d ../../rustdesk --app-name RSDesk -m "RS Solucoes" -v $cargoVer @connArg
+    # Mostra a nossa versao no Windows: 4o numero = nosso build (ex.: 1.5.0.4).
+    $rev = [int]($ver.Split('.')[3])
+    python preprocess.py -d ../../rustdesk --app-name RSDesk -m "RS Solucoes" -v $cargoVer --revision-version $rev @connArg
     if ($LASTEXITCODE -ne 0) { throw "preprocess.py falhou" }
     & C:\RSDesk\tools\nuget.exe restore msi.sln
     msbuild msi.sln -t:clean -p:Configuration=Release -p:Platform=x64 | Out-Null
