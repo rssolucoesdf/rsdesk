@@ -1159,7 +1159,8 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    "https://admin.rustdesk.com".to_owned()
+    // RSDesk: never fall back to RustDesk's public API server.
+    format!("http://{}:{}", config::RENDEZVOUS_SERVERS[0], config::RENDEZVOUS_PORT - 2)
 }
 
 #[inline]
