@@ -79,7 +79,9 @@ Cuidado com o disco: o build completo precisa de muito espaço temporário. Tenh
 
 ## 8. Antivírus e SmartScreen
 
-O executável ainda **não tem assinatura digital**. Por isso o SmartScreen avisa e alguns antivírus (ex.: Bitdefender) bloqueiam.
+O executável **não tem assinatura digital**. Por isso o SmartScreen avisa e alguns antivírus (ex.: Bitdefender) bloqueiam.
+
+**Assinar é opcional.** Para o seu uso (você instala e configura cada máquina), não precisa comprar certificado: basta liberar no SmartScreen e criar a exceção no antivírus. Só vale a pena assinar na escala — muitas máquinas, ou clientes que você não acessa para configurar.
 
 Enquanto não há certificado:
 - SmartScreen: **Mais informações → Executar assim mesmo**.
