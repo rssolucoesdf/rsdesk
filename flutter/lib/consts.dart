@@ -4,9 +4,9 @@ import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/models/state_model.dart';
 import 'package:get/get.dart';
 
-// RSDesk: etiqueta de build propria, mostrada no topo da janela. Incremente a cada build novo
-// (rs1, rs2, ...) para saber qual versao esta rodando.
-const String kRSBuildTag = 'v1.5.0-rs2';
+// RSDesk: versao mostrada no topo da janela = versao do RustDesk + build nosso.
+// Incremente o final (001, 002, ...) a cada build novo para saber qual esta rodando.
+const String kRSBuildTag = '1.5.0.001';
 
 const int kMaxVirtualDisplayCount = 4;
 const int kAllVirtualDisplay = -1;
