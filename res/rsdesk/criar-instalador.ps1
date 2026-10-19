@@ -17,7 +17,10 @@ Copy-Item -Recurse $release $pasta
 # Driver de tela virtual (mesmo arquivo que o release oficial inclui).
 $zip = "$env:TEMP\usbmmidd_v2.zip"
 Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile $zip
-Expand-Archive $zip -DestinationPath "$env:TEMP\usbmmidd" -Force
+Remove-Item -Recurse -Force "$env:TEMP\usbmmidd" -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force "$env:TEMP\usbmmidd" | Out-Null
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory($zip, "$env:TEMP\usbmmidd")
 Remove-Item -Recurse -Force "$env:TEMP\usbmmidd\usbmmidd_v2\Win32"
 Remove-Item -Force "$env:TEMP\usbmmidd\usbmmidd_v2\deviceinstaller64.exe", "$env:TEMP\usbmmidd\usbmmidd_v2\deviceinstaller.exe", "$env:TEMP\usbmmidd\usbmmidd_v2\usbmmidd.bat"
 Move-Item "$env:TEMP\usbmmidd\usbmmidd_v2" "$pasta\usbmmidd_v2"
