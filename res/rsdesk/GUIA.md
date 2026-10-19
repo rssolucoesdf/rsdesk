@@ -85,4 +85,21 @@ Enquanto não há certificado:
 - SmartScreen: **Mais informações → Executar assim mesmo**.
 - Bitdefender: crie exceção para a **pasta de instalação** (`C:\Program Files\RSDesk`) e para o **serviço RSDesk**, não só para o exe.
 
-Solução definitiva: comprar um certificado de assinatura de código. O build já está pronto para assinar: defina `RSDESK_SIGN_PFX` e `RSDESK_SIGN_PASS` antes de gerar, e o instalador sai assinado. (Ver a recomendação de certificado mais barato.)
+Solução definitiva: comprar um certificado de assinatura de código. O build já está pronto para assinar: defina `RSDESK_SIGN_PFX` e `RSDESK_SIGN_PASS` antes de gerar, e o instalador sai assinado.
+
+### Qual certificado comprar (pesquisa 2026)
+
+| Opção | Preço/ano | Token USB? | Serve para uso comercial? |
+|---|---|---|---|
+| **Certum Standard OV (nuvem)** | ~€139 a €209 | não (nuvem) | **sim** — recomendado |
+| SSL.com eSigner OV | ~US$ 180 | não (nuvem) | sim — bom para automação |
+| Certum Open Source | ~€49 | não | **não** — risco de revogação se usar com clientes pagos |
+| Azure Artifact Signing | ~US$ 10/mês | não | provavelmente **não elegível no Brasil** |
+| EV (qualquer) | €329+ / US$ 900 | sim | caro e não vale mais a pena* |
+
+Recomendado: **Certum Standard OV em nuvem** (pessoa física ou empresa, sem token). Link: shop.certum.eu/code-signing.html
+
+Avisos importantes:
+- *Desde 2024 o EV **não** libera o SmartScreen na hora (a Microsoft confirmou). Não pague EV só por isso.
+- O OV também **não** zera o SmartScreen de imediato: a reputação cresce com os downloads. No começo ainda pode aparecer o aviso, com o seu nome como editor.
+- **Assinar pode não parar o Bitdefender.** Ferramentas de acesso remoto costumam ser marcadas como "RemoteAdmin" pela heurística, mesmo assinadas. O caminho real: (1) assinar; (2) a cada versão, enviar o arquivo como **falso positivo** em bitdefender.com/business/submit; (3) enquanto isso, o cliente cria exceção da pasta e do serviço.
