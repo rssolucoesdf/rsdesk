@@ -998,6 +998,7 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
                 permissions(context),
                 password(context),
                 _Card(title: '2FA', children: [tfa()]),
+                if (bind.isIncomingOnly()) operatorAccess(context),
                 if (!isChangeIdDisabled())
                   _Card(title: 'ID', children: [changeId()]),
                 more(context),
@@ -1133,6 +1134,44 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
           return _Button('Change ID', changeIdDialog,
               enabled: !locked && model.connectStatus > 0);
         })));
+  }
+
+  // RSDesk: the machine owner can turn unattended support access on/off. Default on (empty != 'N').
+  Widget operatorAccess(context) {
+    final allowed = bind.mainGetOptionSync(key: 'allow-operator-access') != 'N';
+    return _Card(title: 'Security', children: [
+      Tooltip(
+        waitDuration: Duration(milliseconds: 300),
+        message: translate('allow-operator-access-tip'),
+        child: GestureDetector(
+          child: Row(children: [
+            Checkbox(
+              value: allowed,
+              onChanged: locked
+                  ? null
+                  : (v) async {
+                      await bind.mainSetOption(
+                          key: 'allow-operator-access',
+                          value: (v == true) ? 'Y' : 'N');
+                      setState(() {});
+                    },
+            ).marginOnly(right: 5),
+            Expanded(
+                child: Text(translate('Allow unattended support access'),
+                    style: TextStyle(
+                        color: disabledTextColor(context, !locked)))),
+          ]),
+          onTap: locked
+              ? null
+              : () async {
+                  await bind.mainSetOption(
+                      key: 'allow-operator-access',
+                      value: allowed ? 'N' : 'Y');
+                  setState(() {});
+                },
+        ),
+      ).marginOnly(left: _kCheckBoxLeftMargin),
+    ]);
   }
 
   Widget permissions(context) {

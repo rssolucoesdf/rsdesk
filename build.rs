@@ -101,5 +101,8 @@ fn main() {
     if target_os == "android" {
         build_android_ifaddrs();
     }
+    // RSDesk: switching between the Servidor and Cliente builds changes this env var, which
+    // operator_auth.rs reads with option_env!. Without this line cargo would not recompile.
+    println!("cargo:rerun-if-env-changed=RSDESK_OPERATOR_PUBKEYS");
     println!("cargo:rerun-if-changed=build.rs");
 }

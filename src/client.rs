@@ -4798,10 +4798,19 @@ async fn send_login(
     password: Vec<u8>,
     peer: &mut Stream,
 ) {
-    let msg_out = lc
+    let mut msg_out = lc
         .read()
         .unwrap()
         .create_login_msg(os_username, os_password, password);
+    {
+        let guard = lc.read().unwrap();
+        crate::operator_auth::sign_login_msg(
+            &mut msg_out,
+            &guard.id,
+            &guard.hash,
+            peer.is_secured(),
+        );
+    }
     allow_err!(peer.send(&msg_out).await);
 }
 

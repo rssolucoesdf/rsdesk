@@ -166,6 +166,27 @@ class _InstallPageBodyState extends State<_InstallPageBody>
               Option(desktopicon, label: 'Create desktop icon')
                   .marginOnly(bottom: 7),
               Option(printer, label: 'Install {$appName} Printer'),
+              Offstage(
+                offstage: !bind.isIncomingOnly(),
+                child: Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDarkTheme
+                          ? Color.fromARGB(135, 120, 70, 70)
+                          : Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.shield_outlined, size: 32)
+                            .marginOnly(right: 16),
+                        Expanded(
+                          child: Text(translate('operator_access_consent_tip')),
+                        ),
+                      ],
+                    )).marginOnly(top: 2 * em),
+              ),
               Container(
                   padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(

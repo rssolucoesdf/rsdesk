@@ -84,6 +84,8 @@ message LoginRequest {
   string my_platform = 13;
   bytes hwid = 14;
   string avatar = 17;
+  // RSDesk: operator unattended-access signature over the host id + Hash.operator_nonce.
+  bytes operator_sig = 1001;
 }
 
 message Terminal {
@@ -328,6 +330,8 @@ message CursorPosition {
 message Hash {
   string salt = 1;
   string challenge = 2;
+  // RSDesk: per-connection random nonce the operator signs for unattended access.
+  bytes operator_nonce = 1001;
 }
 
 enum ClipboardFormat {

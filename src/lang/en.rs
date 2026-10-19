@@ -279,5 +279,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("terminal-clipboard-write-tip", "An app in the terminal wants to copy text to this device's clipboard. If granted, this permission applies to terminal apps in all connections until you turn it off in Settings. Manual copy and paste are unaffected."),
         ("port-forward-mux-tip", "Carry every connection of a port-forward mapping over a single connection to the peer, instead of connecting and logging in again for each one."),
         ("relay-fallback-delay-tip", "How long a relay connection that is already up waits for the direct WebRTC connection before it is used instead. Raise it to give a slow direct connection more time to win; lower it to settle on the relay sooner on networks where a direct connection cannot be made. Leave empty for the default of 2.5 seconds."),
+        ("operator_access_consent_tip", "After installation, this computer can be accessed by the support technician for unattended support, without a password. The connection window still appears on screen during each session. You can turn this off at any time in Settings > Security."),
+        ("Allow unattended support access", "Allow unattended support access"),
+        ("allow-operator-access-tip", "When on, the support technician can connect to this computer without a password, using their support key. The connection is still shown on screen and recorded in the local log. Turn it off to require a password again."),
     ].iter().cloned().collect();
 }

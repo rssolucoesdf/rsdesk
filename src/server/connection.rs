@@ -313,6 +313,7 @@ enum ConnAuditPrimaryAuth {
     TemporaryPassword = 2,
     PermanentPassword = 3,
     SwitchSides = 4,
+    OperatorKey = 5,
 }
 
 impl ConnAuditPrimaryAuth {
@@ -543,6 +544,7 @@ impl Connection {
         let hash = Hash {
             salt,
             challenge: Config::get_auto_password(6),
+            operator_nonce: crate::operator_auth::nonce().into(),
             ..Default::default()
         };
         let (tx_from_cm_holder, mut rx_from_cm) = mpsc::unbounded_channel::<ipc::Data>();
@@ -2990,6 +2992,26 @@ impl Connection {
             let allow_logon_screen_password =
                 crate::get_builtin_option(keys::OPTION_ALLOW_LOGON_SCREEN_PASSWORD) == "Y"
                     && is_logon();
+
+            // RSDesk: operator unattended access. A valid operator-key signature over an E2EE
+            // stream grants access like a correct password. Every gate above (IP/ID whitelist,
+            // scope, permissions, privacy mode, id match, terminal pre-login) already ran, and
+            // 2FA + the connection-manager window still run inside the logon path below. Key login
+            // does not touch the password failure counters: Ed25519 is not brute-forceable, and
+            // this keeps password guessers from locking the operator out.
+            if let Some(k) = crate::operator_auth::verify(
+                &lr.operator_sig,
+                &self.hash,
+                self.stream.is_secured(),
+            ) {
+                log::info!("Operator key #{k} accepted for unattended access");
+                self.set_conn_audit_primary_auth(ConnAuditPrimaryAuth::OperatorKey);
+                if !self.send_logon_response_and_keep_alive().await {
+                    return false;
+                }
+                self.try_start_cm(lr.my_id.clone(), lr.my_name.clone(), self.authorized);
+                return true;
+            }
 
             if (password::approve_mode() == ApproveMode::Click && !allow_logon_screen_password)
                 || password::approve_mode() == ApproveMode::Both && !password::has_valid_password()
