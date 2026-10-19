@@ -11,8 +11,28 @@ $versao = (Select-String -Path "$repo\Cargo.toml" -Pattern '^version\s*=\s*"(.+)
 if (-not (Test-Path "$release\rsdesk.exe")) { throw "Build nao encontrado em $release" }
 $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
 
+# Assinatura de codigo (opcional). Define estas variaveis de ambiente para assinar:
+#   $env:RSDESK_SIGN_PFX  = caminho do certificado .pfx
+#   $env:RSDESK_SIGN_PASS = senha do .pfx
+# Sem elas, o build continua sem assinar. Assinar reduz bloqueios do SmartScreen e do antivirus.
+$signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+    Sort-Object FullName | Select-Object -Last 1
+function Assinar([string[]]$arquivos) {
+    if (-not $env:RSDESK_SIGN_PFX) { return }
+    if (-not $signtool) { Write-Warning "signtool.exe nao encontrado; pulando assinatura."; return }
+    foreach ($a in $arquivos) {
+        if (Test-Path $a) {
+            & $signtool.FullName sign /f $env:RSDESK_SIGN_PFX /p $env:RSDESK_SIGN_PASS `
+                /fd SHA256 /tr http://timestamp.sectigo.com /td SHA256 $a
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao assinar $a" }
+        }
+    }
+}
+
 if (Test-Path $pasta) { Remove-Item -Recurse -Force -LiteralPath $pasta }
 Copy-Item -Recurse $release $pasta
+# Assina os arquivos instalados (antes de empacotar), para o antivirus confiar no app rodando.
+Assinar @("$pasta\rsdesk.exe", "$pasta\librustdesk.dll")
 
 # Driver de tela virtual (mesmo arquivo que o release oficial inclui).
 $zip = "$env:TEMP\usbmmidd_v2.zip"
@@ -38,5 +58,6 @@ try {
 New-Item -ItemType Directory -Force $saida | Out-Null
 $exe = "$saida\rsdesk-$versao-x86_64.exe"
 Copy-Item "$repo\target\release\rustdesk-portable-packer.exe" $exe -Force
+Assinar @($exe)
 Remove-Item -Recurse -Force -LiteralPath $pasta
 Write-Output "Instalador: $exe"
