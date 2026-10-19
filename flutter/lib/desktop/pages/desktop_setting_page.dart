@@ -2554,20 +2554,30 @@ class _AboutState extends State<_About> {
                       .marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://rustdesk.com/privacy.html');
-                  },
-                  child: Text(
-                    translate('Privacy Statement'),
-                    style: linkStyle,
-                  ).marginSymmetric(vertical: 4.0)),
-              InkWell(
-                  onTap: () {
-                    launchUrlString('https://rustdesk.com');
+                    launchUrlString('https://github.com/rssolucoesdf/rsdesk');
                   },
                   child: Text(
                     translate('Website'),
                     style: linkStyle,
                   ).marginSymmetric(vertical: 4.0)),
+              Wrap(children: [
+                Text('RSDesk é baseado no RustDesk ('),
+                InkWell(
+                    onTap: () {
+                      launchUrlString('https://github.com/rustdesk/rustdesk');
+                    },
+                    child: Text('https://github.com/rustdesk/rustdesk',
+                        style: linkStyle)),
+                Text('), licenciado sob a AGPL-3.0.'),
+              ]).marginSymmetric(vertical: 4.0),
+              Wrap(children: [
+                Text('Código-fonte desta versão: '),
+                InkWell(
+                    onTap: () {
+                      launchUrlString('https://github.com/rssolucoesdf/rsdesk');
+                    },
+                    child: Text('https://github.com/rssolucoesdf/rsdesk', style: linkStyle)),
+              ]).marginSymmetric(vertical: 4.0),
               Container(
                 decoration: const BoxDecoration(color: Color(0xFF2c8cff)),
                 padding:
