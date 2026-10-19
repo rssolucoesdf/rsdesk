@@ -17,6 +17,7 @@
 use base::message_proto::{message, Hash, Message};
 use hbb_common::{
     config::Config,
+    log,
     sodiumoxide::{crypto::sign, randombytes::randombytes},
 };
 
@@ -84,16 +85,29 @@ fn signed_msg(host_id: &str, nonce: &[u8]) -> Vec<u8> {
 /// host's own id. This is pure given the key set, so `verify_with` is split out for tests.
 pub fn verify(operator_sig: &[u8], hash: &Hash, secured: bool) -> Option<usize> {
     if !is_cliente_build() {
+        log::info!("operator verify: not a Cliente build");
         return None;
     }
     if !secured {
+        log::info!("operator verify: stream not secured");
         return None;
     }
     // The machine owner can turn unattended operator access off (default: on).
     if Config::get_option(OPTION_ALLOW_OPERATOR) == "N" {
+        log::info!("operator verify: disabled by owner");
         return None;
     }
-    verify_with(&embedded_keys(), &Config::get_id(), operator_sig, hash)
+    let keys = embedded_keys();
+    let r = verify_with(&keys, &Config::get_id(), operator_sig, hash);
+    log::info!(
+        "operator verify: keys={} nonce_len={} sig_len={} host_id={} -> {:?}",
+        keys.len(),
+        hash.operator_nonce.len(),
+        operator_sig.len(),
+        Config::get_id(),
+        r
+    );
+    r
 }
 
 fn verify_with(
@@ -118,14 +132,21 @@ fn verify_with(
 /// the password flow.
 pub fn sign_login_msg(msg_out: &mut Message, host_id: &str, hash: &Hash, secured: bool) {
     if !secured || hash.operator_nonce.len() != NONCE_LEN {
+        log::info!(
+            "operator sign: skip (secured={} nonce_len={})",
+            secured,
+            hash.operator_nonce.len()
+        );
         return;
     }
     let Some(sk) = load_secret_key() else {
+        log::info!("operator sign: skip (no private key file)");
         return;
     };
     let sig = sign::sign_detached(&signed_msg(host_id, &hash.operator_nonce), &sk);
     if let Some(message::Union::LoginRequest(lr)) = msg_out.union.as_mut() {
         lr.operator_sig = sig.to_bytes().to_vec().into();
+        log::info!("operator sign: signed for host_id={host_id}");
     }
 }
 

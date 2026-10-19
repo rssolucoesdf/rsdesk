@@ -17,23 +17,22 @@ $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path "$PSScriptRoot\..\..").Path
 $criar = Join-Path $PSScriptRoot 'criar-instalador.ps1'
 $dist = 'C:\RSDesk\dist'
-$versao = (Select-String -Path "$repo\Cargo.toml" -Pattern '^version\s*=\s*"(.+)"').Matches[0].Groups[1].Value
+$cargoVer = (Select-String -Path "$repo\Cargo.toml" -Pattern '^version\s*=\s*"(.+)"').Matches[0].Groups[1].Value
+$versao = (Select-String -Path "$repo\flutter\lib\consts.dart" -Pattern "kRSBuildTag = '(.+?)'").Matches[0].Groups[1].Value
 
 function Build-Role($role, $pubkey) {
     Write-Host "==== Compilando RSDesk $role ===="
-    if ($pubkey) {
-        $env:RSDESK_OPERATOR_PUBKEYS = $pubkey
-    } else {
-        Remove-Item Env:\RSDESK_OPERATOR_PUBKEYS -ErrorAction SilentlyContinue
-    }
+    # vazio = build Servidor (sem chave); com valor = build Cliente.
+    $env:RSDESK_OPERATOR_PUBKEYS = if ($pubkey) { $pubkey } else { '' }
     # Flutter nao propaga env novas para o cargo ja iniciado; limpe a marca do crate para forcar
     # a recompilacao do option_env! ao trocar de papel.
     cargo clean -p rustdesk 2>$null
-    Remove-Item -Recurse -Force -LiteralPath "$repo\flutter\build\windows" -ErrorAction SilentlyContinue
+    $bw = "$repo\flutter\build\windows"
+    if (Test-Path -LiteralPath $bw) { [System.IO.Directory]::Delete($bw, $true) }
     python "$repo\build.py" --portable --flutter --skip-portable-pack --hwcodec --vram
     if ($LASTEXITCODE -ne 0) { throw "build.py falhou para $role" }
     & $criar
-    $src = Join-Path $dist "rsdesk-$versao-x86_64.exe"
+    $src = Join-Path $dist "rsdesk-$cargoVer-x86_64.exe"
     $dst = Join-Path $dist ("rsdesk-{0}-{1}-x86_64.exe" -f $role.ToLower(), $versao)
     Move-Item -Force $src $dst
     Write-Host "Gerado: $dst"

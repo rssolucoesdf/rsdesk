@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 
 // RSDesk: versao mostrada no topo da janela = versao do RustDesk + build nosso.
 // Incremente o final (001, 002, ...) a cada build novo para saber qual esta rodando.
-const String kRSBuildTag = '1.5.0.001';
+const String kRSBuildTag = '1.5.0.002';
 
 const int kMaxVirtualDisplayCount = 4;
 const int kAllVirtualDisplay = -1;
