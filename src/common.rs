@@ -2165,7 +2165,10 @@ async fn key_exchange(conn: &mut Stream, key: &str, log_on_success: bool) -> Res
     // then proceeds (end-to-end encryption between clients is separate), and secure_tcp_required
     // still bails. Without this, a logged-in client (token set) over a keyed OSS server fails with
     // "Failed to secure tcp: deadline has elapsed".
-    let Ok(next) = timeout(READ_TIMEOUT, conn.next()).await else {
+    // A server that does the exchange answers right after accept; waiting the full READ_TIMEOUT
+    // (18 s) for one that never will delays every login-token connection by that much.
+    const KEY_EXCHANGE_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
+    let Ok(next) = timeout(KEY_EXCHANGE_WAIT, conn.next()).await else {
         return Ok(false);
     };
     match next {
