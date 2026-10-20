@@ -59,6 +59,13 @@ class UserModel {
       await updateOtherModels();
       return;
     }
+    // RSDesk: a session is remembered for 30 days, then the operator signs in again.
+    if (_loginExpired()) {
+      await reset(resetOther: true);
+      await updateOtherModels();
+      return;
+    }
+    _touchLoginTimeIfMissing();
     _updateLocalUserInfo();
     final url = await bind.mainGetApiServer();
     final body = {
@@ -126,6 +133,26 @@ class UserModel {
     return null;
   }
 
+  static const _kLoginTime = 'login_time';
+  static const _kSessionDays = 30;
+
+  // Stamped when a session is first seen (covers every sign-in path, including the
+  // one that stores the token on the Rust side); cleared by reset().
+  void _touchLoginTimeIfMissing() {
+    if (bind.mainGetLocalOption(key: _kLoginTime).isEmpty) {
+      bind.mainSetLocalOption(
+          key: _kLoginTime,
+          value: DateTime.now().millisecondsSinceEpoch.toString());
+    }
+  }
+
+  bool _loginExpired() {
+    final t = int.tryParse(bind.mainGetLocalOption(key: _kLoginTime));
+    if (t == null) return false;
+    return DateTime.now().millisecondsSinceEpoch - t >
+        Duration(days: _kSessionDays).inMilliseconds;
+  }
+
   _updateLocalUserInfo() {
     final userInfo = getLocalUserInfo();
     if (userInfo != null) {
@@ -138,6 +165,7 @@ class UserModel {
   Future<void> reset({bool resetOther = false}) async {
     await bind.mainSetLocalOption(key: 'access_token', value: '');
     await bind.mainSetLocalOption(key: 'user_info', value: '');
+    await bind.mainSetLocalOption(key: _kLoginTime, value: '');
     if (resetOther) {
       await gFFI.abModel.reset();
       await gFFI.groupModel.reset();
@@ -153,6 +181,7 @@ class UserModel {
     avatar.value = user.avatar;
     isAdmin.value = user.isAdmin;
     bind.mainSetLocalOption(key: 'user_info', value: jsonEncode(user));
+    _touchLoginTimeIfMissing();
     if (isWeb) {
       // ugly here, tmp solution
       bind.mainSetLocalOption(key: 'verifier', value: user.verifier ?? '');

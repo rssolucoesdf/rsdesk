@@ -246,6 +246,7 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
 
     LPWSTR installFolder = NULL;
     LPWSTR userConfigFolder = NULL;
+    BOOL upgrading = FALSE;
     LPWSTR pwz = NULL;
     LPWSTR pwzData = NULL;
 
@@ -259,13 +260,20 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
     hr = WcaReadStringFromCaData(&pwz, &installFolder);
     ExitOnFailure(hr, "failed to read install folder from custom action data: %ls", pwz);
 
-    // RSDesk: "<install folder>|<user config folder>" (see RustDesk.wxs). The second part is
-    // optional, so a package built without it still works.
+    // RSDesk: "<install folder>|<user config folder>|<upgrading flag>" (see RustDesk.wxs). The
+    // extra parts are optional, so a package built without them still works. The flag carries
+    // [UPGRADINGPRODUCTCODE]: non-empty when this uninstall is part of a version upgrade, and then
+    // the user's session is kept; only a real uninstall clears it.
     {
         LPWSTR sep = wcschr(installFolder, L'|');
         if (sep != NULL) {
             *sep = L'\0';
             userConfigFolder = sep + 1;
+            LPWSTR sep2 = wcschr(userConfigFolder, L'|');
+            if (sep2 != NULL) {
+                *sep2 = L'\0';
+                upgrading = (sep2[1] != L'\0');
+            }
         }
     }
 
@@ -281,7 +289,11 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
 
     WcaLog(LOGMSG_STANDARD, "Removing runtime-generated files from install folder: %ls", installFolder);
     DeleteRuntimeGeneratedFile(installFolder, L"RuntimeBroker_rustdesk.exe");
-    RemoveUserSessionAndHistory(userConfigFolder);
+    if (upgrading) {
+        WcaLog(LOGMSG_STANDARD, "Version upgrade: keeping the user's session and history.");
+    } else {
+        RemoveUserSessionAndHistory(userConfigFolder);
+    }
 
 LExit:
     ReleaseStr(pwzData);
