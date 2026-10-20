@@ -2160,7 +2160,15 @@ async fn key_exchange(conn: &mut Stream, key: &str, log_on_success: bool) -> Res
     let Some(rs_pk) = rs_pk else {
         bail!("Handshake failed: invalid public key from rendezvous server");
     };
-    match timeout(READ_TIMEOUT, conn.next()).await? {
+    // An OSS rendezvous server waits for the client and never sends a key exchange first, so the
+    // read times out. Treat that like a server from before the exchange (Ok(false)): secure_tcp
+    // then proceeds (end-to-end encryption between clients is separate), and secure_tcp_required
+    // still bails. Without this, a logged-in client (token set) over a keyed OSS server fails with
+    // "Failed to secure tcp: deadline has elapsed".
+    let Ok(next) = timeout(READ_TIMEOUT, conn.next()).await else {
+        return Ok(false);
+    };
+    match next {
         Some(Ok(bytes)) => {
             if let Ok(msg_in) = RendezvousMessage::parse_from_bytes(&bytes) {
                 match msg_in.union {
