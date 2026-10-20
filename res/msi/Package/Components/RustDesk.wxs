@@ -5,14 +5,17 @@
 		<?include ../Includes.wxi?>
 
 		<DirectoryRef Id="INSTALLFOLDER_INNER" FileSource="$(var.BuildDir)">
-			<Component Id="App.exe" Guid="620F0F69-4C17-4320-A619-495E329712A4">
+			<Component Id="App.exe" Guid="78676846-e886-4a92-b05e-9d1fb9a32b6a">
 				<File Id="App.exe" Name="$(var.Product).exe" KeyPath="yes" Checksum="yes">
 					<!--<fire:FirewallException Id="AppEx" Name="$(var.Product) Service" Scope="any" IgnoreFailure="yes" />-->
 				</File>
 			</Component>
 		</DirectoryRef>
 
-		<CustomAction Id="RemoveRuntimeGeneratedFiles.SetParam" Return="check" Property="RemoveRuntimeGeneratedFiles" Value="[INSTALLFOLDER_INNER]" />
+		<!-- RSDesk: also hands the installing user's config folder, so uninstall clears the
+		     saved session and device history (a reinstall starts signed out). '|' separated,
+		     parsed by the action itself (see InstallPrinter.SetParam for why). -->
+		<CustomAction Id="RemoveRuntimeGeneratedFiles.SetParam" Return="check" Property="RemoveRuntimeGeneratedFiles" Value="[INSTALLFOLDER_INNER]|[AppDataFolder]$(var.Product)\config" />
 		<CustomAction Id="AddFirewallRules.SetParam" Return="check" Property="AddFirewallRules" Value="1[INSTALLFOLDER_INNER]$(var.Product).exe" />
 		<CustomAction Id="RemoveFirewallRules.SetParam" Return="check" Property="RemoveFirewallRules" Value="0[INSTALLFOLDER_INNER]$(var.Product).exe" />
 		<CustomAction Id="CreateStartService.SetParam" Return="check" Property="CreateStartService" Value="$(var.Product);&quot;[INSTALLFOLDER_INNER]$(var.Product).exe&quot; --service" />
@@ -105,14 +108,14 @@
 
 		<!-- Shortcuts -->
 		<DirectoryRef Id="App.StartMenu">
-			<Component Id="App.StartMenu" Guid="30F6D57A-B805-4DA4-A071-05A3B22400CA">
+			<Component Id="App.StartMenu" Guid="98adb9bf-ac85-400a-b32b-ddf3937f968d">
 				<RegistryValue Root="HKCU" Key="Software\$(var.Product)" Name="App.StartMenu" Type="string" Value="1" KeyPath="yes" />
 				<RemoveFolder Id="Remove.App.StartMenu" On="uninstall" />
 			</Component>
 		</DirectoryRef>
 
 		<DirectoryRef Id="App.StartMenu">
-			<Component Id="App.StartMenu.Shortcut" Guid="43ABCAC7-E47D-42D8-A408-25EC70DBB993" Condition="STARTMENUSHORTCUTS = 1 OR STARTMENUSHORTCUTS = &quot;Y&quot; OR STARTMENUSHORTCUTS = &quot;y&quot;">
+			<Component Id="App.StartMenu.Shortcut" Guid="8ffbae15-6a7a-4a9a-95db-94abba4befaa" Condition="STARTMENUSHORTCUTS = 1 OR STARTMENUSHORTCUTS = &quot;Y&quot; OR STARTMENUSHORTCUTS = &quot;y&quot;">
 				<Shortcut Id="App.StartMenu.Shortcut" Name="!(loc.SC_Client)" Description="!(loc.SC_Client_Desc)" Target="[!App.exe]" Icon="AppIcon" WorkingDirectory="INSTALLFOLDER_INNER" />
 				<!--
 					Fix ICE 38 by adding a dummy registry key that is the key for this shortcut.
@@ -121,26 +124,26 @@
 				<RegistryValue Root="HKCU" Key="Software\$(var.Product)" Name="App.StartMenu.Shortcut" Type="string" Value="1" KeyPath="yes" />
 			</Component>
 
-			<Component Id="App.StartMenu.ShortcutUninstall" Guid="E100D7F8-D607-4513-28DA-2C95E5EA698E" Condition="STARTMENUSHORTCUTS = 1 OR STARTMENUSHORTCUTS = &quot;Y&quot; OR STARTMENUSHORTCUTS = &quot;y&quot;">
+			<Component Id="App.StartMenu.ShortcutUninstall" Guid="a28b76f9-595b-4200-88dc-aad9acee1412" Condition="STARTMENUSHORTCUTS = 1 OR STARTMENUSHORTCUTS = &quot;Y&quot; OR STARTMENUSHORTCUTS = &quot;y&quot;">
 				<Shortcut Id="App.StartMenu.ShortcutUninstall" Name="!(loc.SC_Uninstall)" Description="!(loc.SC_Uninstall_Desc)" Target="[System6432Folder]msiexec.exe" Arguments="/x [ProductCode]" Icon="AppIcon" />
 				<RegistryValue Root="HKCU" Key="Software\$(var.Product)" Name="App.StartMenu.ShortcutUninstall" Type="string" Value="1" KeyPath="yes" />
 			</Component>
 		</DirectoryRef>
 		<StandardDirectory Id="DesktopFolder">
-			<Component Id="App.Desktop.Shortcut" Guid="CA8FB7AA-17F7-4E36-A58A-5A016A303709" Condition="DESKTOPSHORTCUTS = 1 OR DESKTOPSHORTCUTS = &quot;Y&quot; OR DESKTOPSHORTCUTS = &quot;y&quot;">
+			<Component Id="App.Desktop.Shortcut" Guid="7c03db26-c03a-490a-a6e7-88c8c78595ac" Condition="DESKTOPSHORTCUTS = 1 OR DESKTOPSHORTCUTS = &quot;Y&quot; OR DESKTOPSHORTCUTS = &quot;y&quot;">
 				<Shortcut Id="App.Desktop.Shortcut" Name="!(loc.SC_Client)" Description="!(loc.SC_Client_Desc)" Target="[!App.exe]" Icon="AppIcon" WorkingDirectory="INSTALLFOLDER_INNER" />
 				<RegistryValue Root="HKCU" Key="Software\$(var.Product)" Name="App.Desktop.Shortcut" Type="string" Value="1" KeyPath="yes" />
 			</Component>
 		</StandardDirectory>
 		<StandardDirectory Id="StartupFolder">
-			<Component Id="App.StartupFolder.ShortcutTray" Guid="B1D1E2BB-E53E-E159-DB7C-744D5C726A8C" Condition="STARTUPSHORTCUTS = 1 AND (NOT CC_CONNECTION_TYPE=&quot;outgoing&quot;)">
+			<Component Id="App.StartupFolder.ShortcutTray" Guid="69e53d85-6ad5-4ff4-8bfb-81b8e0a88c5a" Condition="STARTUPSHORTCUTS = 1 AND (NOT CC_CONNECTION_TYPE=&quot;outgoing&quot;)">
 				<Shortcut Id="App.StartupFolder.ShortcutTray" Name="!(loc.SC_Client_Tray)" Description="!(loc.SC_Client_Tray_Desc)" Target="[!App.exe]" Arguments="--tray" Icon="AppIcon" WorkingDirectory="INSTALLFOLDER_INNER" />
 				<RegistryValue Root="HKCU" Key="Software\$(var.Product)" Name="App.StartupFolder.ShortcutTray" Type="string" Value="1" KeyPath="yes" />
 			</Component>
 		</StandardDirectory>
 
 		<!--<DirectoryRef Id="INSTALLFOLDER_INNER">
-			<Component Id="App.UninstallShortcut" Guid="FB0F2AC7-2AE5-4C54-B860-5E472620B6B1">
+			<Component Id="App.UninstallShortcut" Guid="7cd8c76d-57f6-4666-abe9-97a4351a840c">
 				<Shortcut Id="App.UninstallShortcut" Name="!(loc.SC_Uninstall)" Description="!(loc.SC_Uninstall_Desc)" Target="[System6432Folder]msiexec.exe" Arguments="/x [ProductCode]" Icon="AppIcon" />
 			</Component>
 		</DirectoryRef>-->
@@ -154,6 +157,291 @@
 			<ComponentRef Id="App.StartupFolder.ShortcutTray" />
 
 			<!--$AutoComonentStart$-->
+			<Component Guid="abeb4950-c065-476d-9ccb-34056b348b1e" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/desktop_drop_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="5eb982e9-f389-4c52-ae7d-8ad1bf134f89" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/desktop_multi_window_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="ec982ec7-4364-4dcf-becd-58a0a4b68958" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/dylib_virtual_display.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="ac2b48ca-b542-45a1-9520-8e26d3b56eca" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/file_selector_windows_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="fb94268c-a1ac-4b11-8ff6-922fb46154e9" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/flutter_custom_cursor_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="13d3109d-0dc5-40ea-a820-f11b33ba1936" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/flutter_gpu_texture_renderer_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="bf903af2-6234-4f02-b1cb-8a0709a13cb9" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/flutter_windows.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="d2aced7b-95a9-4461-8cad-6078d4600dd8" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/librustdesk.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="8d4426e6-6419-456e-a5fd-c008228fb2b3" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/screen_retriever_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6404ec50-01f9-4fb2-a0a6-99c2e34dd93f" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/texture_rgba_renderer_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7ca15424-c6b2-48a3-8767-54ebe8899367" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/uni_links_desktop_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="51c51955-1561-4d99-b1a3-170d8e8e66ef" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/url_launcher_windows_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="d3e183c7-7fac-412b-958a-bc785a115de7" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/window_manager_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="f96acb10-6543-495d-98e1-d4461f981da4" >
+				<File Source="C:/RSDesk/rsdesk/rustdesk/window_size_plugin.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="ce14cac9-9000-43a7-ba5b-ffc25366d71f" Subdirectory="data">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/app.so" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="75eb7ea5-ad86-4860-8966-c062461df783" Subdirectory="data">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/icudtl.dat" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="1c9e651f-e8d8-432c-b8ea-8c115d4e7513" Subdirectory="data\flutter_assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/AssetManifest.bin" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="52f85772-5e40-4e38-85d0-deed7748ec80" Subdirectory="data\flutter_assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/AssetManifest.json" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="97e425ba-4241-4b86-aebe-d1f39b2bbc55" Subdirectory="data\flutter_assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/FontManifest.json" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a797213b-5d2f-4493-a542-293aeb989a28" Subdirectory="data\flutter_assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/NOTICES.Z" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="d5539f64-c632-42ef-9894-42ed45528a85" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/actions.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="af71d6ba-d7ac-4755-8eac-7f17f8045859" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/actions_mobile.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6fd434cb-1e2c-4967-82f9-40b91b6b07dd" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/address_book.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="ddfeb63b-36e1-49c0-9650-30dce88ca2e7" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/android.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="3205d5ae-53eb-44be-b155-12cfcfe81d56" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/arrow.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="d166013c-5ced-4231-a07e-dd66fb1577f3" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-apple.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="61ff47c0-c079-4dff-b81e-f4e508246429" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-auth0.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7565d2cd-9d0a-4bd5-ab5e-cf4a78077781" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-default.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="5f4e3b38-4400-47ec-b5a0-1da548d5727c" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-facebook.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="82505705-080b-4412-b78b-f1a23bb814cf" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-github.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="f1749dc9-50f6-478e-81aa-2089768aa20f" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-gitlab.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a1f24a4d-86fa-41fb-86f0-166c9a6fd3b5" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-google.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a2b274cd-fc2e-4dd2-87bf-cb0a0bd16351" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-microsoft.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="c17fac84-4a3a-4950-aa6f-0ee071e6b616" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/auth-okta.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="8a08049e-3fde-40bf-9b72-bc2765f37d14" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/call_end.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6c4268bd-6c34-4718-b87b-8b0d1363042c" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/call_wait.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7137c240-8f5a-4536-8a97-bc00c7e63ac2" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/chat.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="957e108a-07a9-4b46-8ffc-852605decba2" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/chat2.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a271bdc4-bc8b-4d5a-aafc-bd6f78b350db" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/checkbox-outline.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6fae1f9e-2bcd-4a6c-bf8b-e1e4e90242d6" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/chevron_up_chevron_down.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="55665f98-fe46-490a-b880-534f983d730d" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/close.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6597872e-4341-4ee2-b52c-fa5a9ecb3f85" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/device_group.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6ee31730-c71d-48a3-9656-2a5c5acd32c7" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/display.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="8a9d47f9-1358-46d6-8483-564acdbf2daa" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/display_switcher.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="08cd3a04-3b21-4bb7-a15d-605f7e26e5bd" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/dots.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="1ee0affe-85f7-4811-875e-6cf19a1b0fb3" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/file.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="15d4ac87-f5d5-453c-8f69-38e853baacee" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/file_transfer.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="edf1f4ba-01bc-4c2d-8e04-56c8875ded16" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/folder.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="360af469-1f93-4fbb-b76c-0f5a41473f3a" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/folder_new.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="38357b9a-22ab-47ef-917f-c53292144a30" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/fullscreen.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="fe2947c0-3892-4790-bfa0-b849c6753509" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/fullscreen_exit.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="05902488-0dd6-448b-8f56-d62b1a774e09" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/gestures.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7f02e2ab-4a5d-4530-a91f-a7e125fe1de1" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/home.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="76a85ab2-60ae-4ca0-aa54-4763805595b4" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/icon.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="0812c5bb-505f-4246-86ca-94f980ba0b1b" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/insecure.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6816428a-42eb-499e-8cb0-2ccfcb0ed721" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/insecure_relay.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="2e926270-1e81-4536-a124-772d72215b2d" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/kb_layout_iso.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="74f39d05-037e-40ae-8552-6e7320dd7620" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/kb_layout_not_iso.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="10bf4058-30d7-4cac-9fcf-87e172bf3c52" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/keyboard_mouse.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="9da25b70-fab6-4617-946a-9c8059d15928" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/linux.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="af7107e7-f324-457b-8896-f7023db828af" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/mac.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="f9ca69db-51f2-4ace-baca-c00627320309" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/message_24dp_5F6368.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="4a4ee729-94c9-4b7f-b6b4-56d850a48ab7" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/more.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="48a37414-61d4-48ac-8d1f-af6ce803c56d" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/peer_searchbar.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="f2ff2c74-f40c-4c19-b36c-9880f8180b3c" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/pinned.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="1070b0e3-cbaa-45b4-9f21-76afd40b292d" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/rec.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="95f4b98f-cd68-40f5-a487-c1492527a2c5" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/record_screen.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="909a9ced-089a-4aac-a1c0-41abd39b0745" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/refresh.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="5ed20bb2-c5d2-44ad-b532-e558fe73e22b" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/scam.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="26a9a52c-e6a1-4a45-be15-db88f940a6fc" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/screen.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="0bb8021e-3e42-44cc-9648-3894c2773720" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/search.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="0c55c070-df31-47fe-b40b-2445d7e7c478" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/secure.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="cb409181-83af-43c7-8d99-26c3396b800a" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/secure_relay.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="6771991a-0d8c-4058-b05e-22c8fc92f8a2" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/tabbar.ttf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="1c993e57-cb7d-4259-a07a-b690f08840ea" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/transfer.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="054d76a9-093d-46de-9ecb-5265f89c891e" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/trash.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="1a445388-fc5e-42ea-8103-66bb3ac628b6" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/unpinned.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="cf85f079-6a5b-48c7-9251-7ee27661d04d" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/voice_call.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="45a0a92b-5692-4472-9e0f-1df5bd8c35fd" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/voice_call_waiting.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7e9e5544-60b7-455a-863c-bf732f3af974" Subdirectory="data\flutter_assets\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/assets/win.svg" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="36c71944-b136-4e11-a50f-baad53332265" Subdirectory="data\flutter_assets\fonts">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/fonts/MaterialIcons-Regular.otf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="44a500a2-8431-4f81-9992-626a50c966dd" Subdirectory="data\flutter_assets\packages\dash_chat_2\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/dash_chat_2/assets/placeholder.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a30cc2b6-2bdb-46d0-804e-6e87024f36fb" Subdirectory="data\flutter_assets\packages\dash_chat_2\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/dash_chat_2/assets/profile_placeholder.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="3bc348b2-0fe0-4860-b358-aea60cb69901" Subdirectory="data\flutter_assets\packages\flex_color_picker\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/flex_color_picker/assets/opacity.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="203bb186-dcfd-45cd-b66d-5f872fd89232" Subdirectory="data\flutter_assets\packages\wakelock_plus\assets">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/wakelock_plus/assets/no_sleep.js" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="2d49c7dd-88b1-4392-a060-2c283a899dcf" Subdirectory="data\flutter_assets\packages\window_manager\images">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/window_manager/images/ic_chrome_close.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="fd68e2f1-76ae-47fc-8883-8c7cf3fb49f7" Subdirectory="data\flutter_assets\packages\window_manager\images">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/window_manager/images/ic_chrome_maximize.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="e8e8eb32-f442-4e59-b444-bd04b4bf5e82" Subdirectory="data\flutter_assets\packages\window_manager\images">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/window_manager/images/ic_chrome_minimize.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="dadbdd9c-9f41-4fe8-8e8f-14345660c167" Subdirectory="data\flutter_assets\packages\window_manager\images">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/packages/window_manager/images/ic_chrome_unmaximize.png" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="a4d697b4-923c-48c7-9e9c-2edee4aeec8f" Subdirectory="data\flutter_assets\shaders">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/data/flutter_assets/shaders/ink_sparkle.frag" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="346f228d-0547-4014-bec9-e8a68c093c4c" Subdirectory="usbmmidd_v2">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/usbmmidd_v2/idd_instructions.txt" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="d449fc8b-bb6a-4c02-a451-7cba709df81d" Subdirectory="usbmmidd_v2">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/usbmmidd_v2/License.txt" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="7cb76ad7-ba8c-4545-b85c-feb23f067462" Subdirectory="usbmmidd_v2">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/usbmmidd_v2/usbmmidd.cat" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="0c809b6e-a196-4abb-9840-404ecd0d0c64" Subdirectory="usbmmidd_v2">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/usbmmidd_v2/usbmmIdd.inf" KeyPath="yes" Checksum="yes" />
+			</Component>
+			<Component Guid="15eaa7e1-99d1-4b2c-b494-98dcdd0fd3de" Subdirectory="usbmmidd_v2\x64">
+				<File Source="C:/RSDesk/rsdesk/rustdesk/usbmmidd_v2/x64/usbmmIdd.dll" KeyPath="yes" Checksum="yes" />
+			</Component>
 			<!--$AutoComponentEnd$-->
 
 		</ComponentGroup>

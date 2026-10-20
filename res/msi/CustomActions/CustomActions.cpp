@@ -162,6 +162,69 @@ BOOL DeleteRuntimeGeneratedFile(LPCWSTR installFolder, LPCWSTR fileName)
     return SafeDeleteItem(fullPath);
 }
 
+// RSDesk: a reinstall must start signed out and without the device history, so uninstall also
+// clears the per-user session/cache files. The machine id (<app>.toml) and the server options
+// (<app>2.toml) are kept, so a Cliente keeps its id across reinstalls.
+static BOOL PathEndsWithConfigFolder(const std::wstring& path)
+{
+    size_t pos = path.find_last_of(L"\\/");
+    std::wstring last = (pos == std::wstring::npos) ? path : path.substr(pos + 1);
+    return _wcsicmp(last.c_str(), L"config") == 0;
+}
+
+static void DeleteMatchingFiles(const std::wstring& folder, LPCWSTR pattern)
+{
+    WIN32_FIND_DATAW fd;
+    std::wstring search = folder + L"\\" + pattern;
+    HANDLE h = FindFirstFileW(search.c_str(), &fd);
+    if (h == INVALID_HANDLE_VALUE) return;
+    do {
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+            DeleteRuntimeGeneratedFile(folder.c_str(), fd.cFileName);
+        }
+    } while (FindNextFileW(h, &fd));
+    FindClose(h);
+}
+
+static void DeleteDirectoryTree(const std::wstring& dir)
+{
+    WIN32_FIND_DATAW fd;
+    std::wstring search = dir + L"\\*";
+    HANDLE h = FindFirstFileW(search.c_str(), &fd);
+    if (h != INVALID_HANDLE_VALUE) {
+        do {
+            if (wcscmp(fd.cFileName, L".") == 0 || wcscmp(fd.cFileName, L"..") == 0) continue;
+            if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                if (fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) continue; // never follow links
+                DeleteDirectoryTree(dir + L"\\" + fd.cFileName);
+            } else {
+                DeleteRuntimeGeneratedFile(dir.c_str(), fd.cFileName);
+            }
+        } while (FindNextFileW(h, &fd));
+        FindClose(h);
+    }
+    if (RemoveDirectoryW(dir.c_str())) {
+        WcaLog(LOGMSG_STANDARD, "Runtime cleanup removed folder '%ls'.", dir.c_str());
+    }
+}
+
+static void RemoveUserSessionAndHistory(LPCWSTR configFolder)
+{
+    if (configFolder == NULL || configFolder[0] == L'\0') return;
+    std::wstring folder(configFolder);
+    while (!folder.empty() && (folder.back() == L'\\' || folder.back() == L'/')) folder.pop_back();
+    if (folder.empty() || PathIsRootW(folder.c_str()) || !PathEndsWithConfigFolder(folder)) {
+        WcaLog(LOGMSG_STANDARD, "Refusing session cleanup outside a config folder: '%ls'.", folder.c_str());
+        return;
+    }
+    if (GetFileAttributesW(folder.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+    WcaLog(LOGMSG_STANDARD, "Removing saved session and device history from '%ls'.", folder.c_str());
+    DeleteMatchingFiles(folder, L"*_local.toml");  // signed-in session
+    DeleteMatchingFiles(folder, L"*_ab.toml");     // address book cache
+    DeleteMatchingFiles(folder, L"*_group.toml");  // group cache
+    DeleteDirectoryTree(folder + L"\\peers");       // recent devices
+}
+
 // See `Package.wxs` for the sequence of this custom action.
 //
 // Upgrade/uninstall sequence:
@@ -182,6 +245,7 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
     DWORD er = ERROR_SUCCESS;
 
     LPWSTR installFolder = NULL;
+    LPWSTR userConfigFolder = NULL;
     LPWSTR pwz = NULL;
     LPWSTR pwzData = NULL;
 
@@ -195,6 +259,16 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
     hr = WcaReadStringFromCaData(&pwz, &installFolder);
     ExitOnFailure(hr, "failed to read install folder from custom action data: %ls", pwz);
 
+    // RSDesk: "<install folder>|<user config folder>" (see RustDesk.wxs). The second part is
+    // optional, so a package built without it still works.
+    {
+        LPWSTR sep = wcschr(installFolder, L'|');
+        if (sep != NULL) {
+            *sep = L'\0';
+            userConfigFolder = sep + 1;
+        }
+    }
+
     if (installFolder == NULL || installFolder[0] == L'\0') {
         WcaLog(LOGMSG_STANDARD, "Install folder path is empty, skipping runtime cleanup.");
         goto LExit;
@@ -207,6 +281,7 @@ UINT __stdcall RemoveRuntimeGeneratedFiles(
 
     WcaLog(LOGMSG_STANDARD, "Removing runtime-generated files from install folder: %ls", installFolder);
     DeleteRuntimeGeneratedFile(installFolder, L"RuntimeBroker_rustdesk.exe");
+    RemoveUserSessionAndHistory(userConfigFolder);
 
 LExit:
     ReleaseStr(pwzData);
