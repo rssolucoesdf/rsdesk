@@ -2167,7 +2167,7 @@ async fn key_exchange(conn: &mut Stream, key: &str, log_on_success: bool) -> Res
     // "Failed to secure tcp: deadline has elapsed".
     // A server that does the exchange answers right after accept; waiting the full READ_TIMEOUT
     // (18 s) for one that never will delays every login-token connection by that much.
-    const KEY_EXCHANGE_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
+    const KEY_EXCHANGE_WAIT: u64 = 5_000; // ms, like READ_TIMEOUT
     let Ok(next) = timeout(KEY_EXCHANGE_WAIT, conn.next()).await else {
         return Ok(false);
     };
